@@ -1,0 +1,21 @@
+node_modules/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+!.env.deploy.example
+
+# Runtime data and generated images
+data/
+public/generated/
+public/assets/
+public/index.html
+public/app.js
+public/styles.css
+
+# Logs and local caches
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db

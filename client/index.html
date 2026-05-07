@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Studio - AI 智能图像实验室</title>
+  <link rel="stylesheet" href="/src/styles/index.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✦%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <script>
+    // 根据缓存的登录状态立即切换面板，避免闪烁
+    if (localStorage.getItem('ias_logged_in')) {
+      document.body.classList.add('auth-cached');
+    }
+  </script>
+  <!-- 登录/注册面板 -->
+  <div class="login-panel" id="loginPanel">
+    <div class="login-card">
+      <div class="brand">
+        <span class="brand-mark">✦</span>
+        <span>Image Studio</span>
+      </div>
+      <div class="auth-tabs" id="authTabs">
+        <button class="auth-tab active" type="button" data-auth-tab="login">登录</button>
+        <button class="auth-tab" type="button" data-auth-tab="register">注册</button>
+      </div>
+      <!-- 登录表单 -->
+      <form id="loginForm" class="auth-form">
+        <input type="text" id="loginUsername" placeholder="用户名" required autocomplete="username" />
+        <input type="password" id="loginPassword" placeholder="密码" required autocomplete="current-password" />
+        <p class="error-message" id="loginError"></p>
+        <button class="primary-button" type="submit">登录</button>
+      </form>
+      <!-- 注册表单 -->
+      <form id="registerForm" class="auth-form" hidden>
+        <input type="text" id="regUsername" placeholder="用户名（2-20 字符）" required autocomplete="username" />
+        <input type="password" id="regPassword" placeholder="密码（至少 6 位）" required autocomplete="new-password" />
+        <input type="password" id="regConfirm" placeholder="确认密码" required autocomplete="new-password" />
+        <input type="text" id="regCode" placeholder="邀请码（必填）" required autocomplete="off" />
+        <p class="auth-hint">邀请码为一次性使用，请联系管理员获取。</p>
+        <p class="error-message" id="registerError"></p>
+        <button class="primary-button" type="submit">注册并进入</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-container" id="appContainer" hidden>
+    <!-- 顶部导航 -->
+    <header class="site-nav">
+      <a class="brand" href="/" aria-label="AI生图工作台">
+        <span class="brand-mark">✦</span>
+        <span>Image Studio</span>
+      </a>
+      <div class="nav-actions">
+        <div class="admin-quick-actions" id="adminQuickActions" hidden>
+          <a class="admin-chip" id="quickAdminDashboardLink" href="/api/admin/dashboard" target="_blank" rel="noopener">管理面板</a>
+          <button class="admin-chip" id="quickApiSettingsButton" type="button">API 节点</button>
+        </div>
+        <button class="theme-toggle" id="themeToggle" type="button" title="切换主题">
+          <span class="theme-icon-dark">☾</span>
+          <span class="theme-icon-light">☼</span>
+        </button>
+        <div class="user-menu" id="userMenu" hidden>
+          <button class="user-menu-trigger" id="userMenuTrigger" type="button">
+            <span class="user-avatar" id="userAvatar"></span>
+            <span class="user-menu-name" id="navUser"></span>
+            <span class="user-menu-arrow">▾</span>
+          </button>
+          <div class="user-menu-dropdown" id="userMenuDropdown">
+            <a class="user-menu-item" id="adminDashboardLink" href="/api/admin/dashboard" target="_blank" hidden>📊 管理面板</a>
+            <button class="user-menu-item" id="adminInvitesButton" type="button" hidden>🎟 邀请码管理</button>
+            <button class="user-menu-item" id="apiSettingsButton" type="button" hidden>API 设置</button>
+            <hr class="user-menu-divider" />
+            <button class="user-menu-item danger" id="logoutButton" type="button">↩ 登出</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="studio-layout workbench-layout">
+      <div class="mobile-overlay" id="mobileOverlay"></div>
+
+      <!-- 左侧：配置面板 -->
+      <aside class="studio-sidebar" id="studioSidebar">
+        <form id="generateForm" class="prompt-composer">
+          <div class="workbench-panel-title">
+            <div>
+              <p>Creative Console</p>
+              <h1>AI 图像生成</h1>
+            </div>
+            <span class="panel-version">gpt-image-2</span>
+          </div>
+
+          <div class="composer-section main-prompt">
+            <div class="mode-tabs" role="tablist" aria-label="生成模式">
+              <button class="mode-tab" type="button" data-mode="text" aria-selected="true">
+                <span>文生图</span>
+              </button>
+              <button class="mode-tab" type="button" data-mode="image" aria-selected="false">
+                <span>图生图</span>
+              </button>
+            </div>
+
+            <div class="node-inline-card">
+              <div>
+                <span class="field-caption">API 节点</span>
+                <strong id="currentApiNode">加载中</strong>
+              </div>
+              <button class="ghost-button" id="sidebarApiSettingsButton" type="button" hidden>手动切换</button>
+            </div>
+
+            <div class="field compact-field">
+              <span>生图模型</span>
+              <input class="readonly-input" type="text" value="gpt-image-2" readonly />
+              <select id="model" name="model" class="native-select-hidden" data-native-hidden>
+                <option value="gpt-image-2" selected>gpt-image-2</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="composer-section generation-settings">
+            <div class="section-title">输出比例</div>
+            <select id="size" name="size" class="native-select-hidden" data-native-hidden>
+              <option value="3840x2160" selected>横版 4K 3840 x 2160</option>
+              <option value="2160x3840">竖版 4K 2160 x 3840</option>
+              <option value="1024x1024">方图 1024 x 1024</option>
+            </select>
+            <div class="ratio-card-grid" aria-label="输出比例">
+              <button class="ratio-card is-active" type="button" data-size-card="3840x2160" aria-pressed="true">
+                <span class="ratio-shape wide"></span>
+                <strong>16:9</strong>
+                <small>横版 4K</small>
+              </button>
+              <button class="ratio-card" type="button" data-size-card="2160x3840" aria-pressed="false">
+                <span class="ratio-shape tall"></span>
+                <strong>9:16</strong>
+                <small>竖版 4K</small>
+              </button>
+              <button class="ratio-card" type="button" data-size-card="1024x1024" aria-pressed="false">
+                <span class="ratio-shape square"></span>
+                <strong>1:1</strong>
+                <small>方图</small>
+              </button>
+            </div>
+            <p class="field-hint" id="sizeHint" hidden>当前输出尺寸会随比例卡片同步。</p>
+
+            <div class="settings-grid compact-settings">
+              <label class="field">
+                <span>生成质量</span>
+                <select id="quality" name="quality">
+                  <option value="auto">自动</option>
+                  <option value="low">快速</option>
+                  <option value="medium">均衡</option>
+                  <option value="high">高清</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>背景处理</span>
+                <select id="background" name="background">
+                  <option value="auto">自动</option>
+                  <option value="opaque">不透明</option>
+                  <option value="transparent">透明</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="count-control">
+              <div class="count-header">
+                <span>生成数量</span>
+                <output id="countValue" for="count">1 张</output>
+              </div>
+              <input id="count" name="count" type="range" min="1" max="50" step="1" value="1" />
+            </div>
+
+            <label class="field compact-field">
+              <span>并发数</span>
+              <input id="concurrency" name="concurrency" type="number" min="1" max="10" step="1" value="1" />
+            </label>
+          </div>
+
+          <div class="composer-section prompt-block">
+            <div class="prompt-header-row">
+              <div class="section-title">提示词</div>
+              <button type="button" id="clearPrompt">清空</button>
+            </div>
+            <div class="prompt-field-wrapper">
+              <textarea id="prompt" name="prompt" placeholder="例如：天龙八部推广图，慕容复施展斗转星移，宋式武侠场景，电影级光影，横版海报构图" maxlength="4000" required></textarea>
+              <div class="prompt-footer">
+                <span id="promptCount">0 / 4000</span>
+              </div>
+            </div>
+            <div class="quick-prompts" aria-label="快捷提示词">
+              <button type="button" data-prompt="天龙八部推广图，慕容门派场景，慕容复施展斗转星移，武侠海报，电影级光影，横版构图">武侠海报</button>
+              <button type="button" data-prompt="游戏角色立绘，华丽服装，精致面部，动态姿态，商业宣传海报">角色立绘</button>
+              <button type="button" data-prompt="科技产品首发海报，金属设备，强对比光影，黑白银配色，高级商业摄影">产品海报</button>
+              <button type="button" data-prompt="国风场景概念图，云雾山门，恢弘建筑，晨光，细节丰富，宽画幅">国风场景</button>
+            </div>
+          </div>
+
+          <div class="composer-section prompt-assistant-section" id="promptAssistant">
+            <div class="section-title">提示词助手</div>
+            <p class="assistant-desc">AI 帮你优化提示词，让生成效果更好</p>
+            <div class="assistant-actions">
+              <button class="assistant-action-btn" type="button" data-assistant-action="polish">
+                <span class="action-label">润色</span>
+                <span class="action-hint">优化措辞与细节</span>
+              </button>
+              <button class="assistant-action-btn" type="button" data-assistant-action="expand">
+                <span class="action-label">扩写</span>
+                <span class="action-hint">丰富画面描述</span>
+              </button>
+              <button class="assistant-action-btn" type="button" data-assistant-action="ideas">
+                <span class="action-label">灵感</span>
+                <span class="action-hint">获取创意建议</span>
+              </button>
+            </div>
+            <div class="assistant-result" id="assistantResult" hidden>
+              <div class="assistant-result-header">
+                <strong id="assistantTitle">AI 建议</strong>
+                <div class="assistant-result-actions">
+                  <button type="button" id="applyAssistantPrompt">采用建议</button>
+                  <button type="button" id="dismissAssistant">取消</button>
+                </div>
+              </div>
+              <div class="assistant-content">
+                <p id="assistantPrompt"></p>
+                <ul id="assistantNotes"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="composer-section reference-panel" id="referencePanel" hidden>
+            <div class="section-title">参考图</div>
+            <div class="field-meta">
+              <span>最多 10 张，不限制大小；支持拖拽、粘贴、点击上传</span>
+              <button class="link-button" type="button" id="clearReferences">重置</button>
+            </div>
+            <div class="file-field">
+              <input type="file" id="referenceImages" multiple accept="image/png,image/jpeg,image/webp" />
+              <div class="drop-hint">
+                <div class="drop-icon">+</div>
+                <p>拖拽图片到此 / Ctrl+V 粘贴 / 点击选择</p>
+              </div>
+            </div>
+            <div class="reference-list" id="referenceList"></div>
+            <p class="field-hint" id="referenceState">未选择图片</p>
+          </div>
+
+          <div class="composer-submit">
+            <p class="request-state" id="requestState"></p>
+            <p class="error-message" id="errorMessage"></p>
+            <button class="primary-button" type="submit" id="generateButton">
+              <span>立即生成</span>
+            </button>
+          </div>
+        </form>
+      </aside>
+
+      <!-- 右侧：生成任务及结果 -->
+      <section class="studio-main" id="tasks" aria-label="生成任务">
+        <div class="result-toolbar">
+          <div>
+            <p class="eyebrow">Recent Images</p>
+            <h2>最近生成图片</h2>
+            <p id="resultMeta">等待任务</p>
+          </div>
+          <div class="toolbar-actions">
+            <div class="status-badge" id="statusBadge">
+              <span class="status-dot"></span>
+              <span>检查配置中</span>
+            </div>
+            <button class="ghost-button" type="button" id="refreshButton">刷新</button>
+            <div class="batch-menu" id="batchMenu">
+              <button class="ghost-button batch-trigger" type="button" id="batchTrigger">批量 ▾</button>
+              <div class="batch-dropdown" id="batchDropdown">
+                <button class="batch-item" type="button" data-batch-delete="succeeded">删除全部已完成</button>
+                <button class="batch-item" type="button" data-batch-delete="failed">删除全部失败</button>
+                <button class="batch-item" type="button" data-batch-delete="canceled">删除全部已取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="task-filters">
+          <button class="filter-tab" data-status="all" aria-pressed="true">全部</button>
+          <button class="filter-tab" data-status="active" aria-pressed="false">进行中</button>
+          <button class="filter-tab" data-status="succeeded" aria-pressed="false">已完成</button>
+          <button class="filter-tab" data-status="failed" aria-pressed="false">失败</button>
+        </div>
+
+        <div class="task-panel" id="taskList">
+          <!-- 任务列表将由 JS 渲染 -->
+          <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon"></div>
+            <h3>等待生成</h3>
+            <p>左侧填写提示词后，进度和图片会显示在这里。</p>
+          </div>
+        </div>
+
+        <div class="pagination" id="pagination" hidden>
+          <button class="ghost-button" id="prevPage">上一页</button>
+          <span id="pageInfo">1 / 1</span>
+          <button class="ghost-button" id="nextPage">下一页</button>
+        </div>
+      </section>
+      <button class="mobile-fab" id="mobileFab" type="button" aria-label="新建生成任务">
+        创作
+      </button>
+    </main>
+  </div>
+
+  <div class="modal" id="apiSettingsModal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog api-settings-dialog">
+      <header class="modal-header">
+        <h2>API 节点设置</h2>
+        <button class="ghost-button" type="button" data-modal-close>关闭</button>
+      </header>
+      <div class="modal-body">
+        <div class="api-current-box">
+          <span>当前节点</span>
+          <strong id="apiBaseCurrent">--</strong>
+        </div>
+        <label class="field">
+          <span>预设节点</span>
+          <select id="apiBaseSelect"></select>
+        </label>
+        <label class="field">
+          <span>自定义地址</span>
+          <input id="customApiBase" type="url" placeholder="https://example.com/v1" />
+        </label>
+        <label class="field">
+          <span>中转 API Key</span>
+          <input id="customApiKey" type="password" placeholder="sk-..." />
+        </label>
+        <label class="field">
+          <span>生图模型</span>
+          <input id="customImageModel" type="text" value="gpt-image-2" readonly />
+        </label>
+        <p class="field-hint">保存后立即生效，地址会自动补齐 /v1。</p>
+        <p class="error-message" id="apiSettingsError"></p>
+        <p class="request-state" id="apiSettingsResult"></p>
+        <div class="api-settings-actions">
+          <button class="ghost-button" id="testApiBaseBtn" type="button">测试节点</button>
+          <button class="primary-button" id="saveApiBaseBtn" type="button">保存切换</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 邀请码管理面板（仅管理员） -->
+  <div class="modal" id="invitesModal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog">
+      <header class="modal-header">
+        <h2>邀请码管理</h2>
+        <button class="ghost-button" type="button" data-modal-close>关闭</button>
+      </header>
+      <div class="modal-body">
+        <div class="invites-toolbar">
+          <div>
+            <label class="field" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+              <span>生成数量：</span>
+              <input type="number" id="inviteCount" min="1" max="20" value="1" style="width: 80px;" />
+            </label>
+          </div>
+          <button class="primary-button" type="button" id="generateInvitesBtn">生成邀请码</button>
+        </div>
+        <p class="error-message" id="invitesError"></p>
+        <div class="invites-list" id="invitesList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片大图浏览器 -->
+  <div class="image-viewer" id="imageViewer" hidden>
+    <div class="viewer-backdrop"></div>
+    <div class="viewer-dialog">
+      <header class="viewer-toolbar">
+        <h2 id="viewerTitle">图片详情</h2>
+        <div class="viewer-actions">
+          <a class="primary-button" id="viewerDownload" download>下载原图</a>
+          <button class="ghost-button" id="viewerClose" data-viewer-close>关闭</button>
+        </div>
+      </header>
+      <div class="viewer-stage">
+        <button class="viewer-nav" id="viewerPrev">‹</button>
+        <img id="viewerImage" src="" alt="" />
+        <button class="viewer-nav" id="viewerNext">›</button>
+      </div>
+      <footer class="viewer-meta">
+        <p id="viewerPrompt"></p>
+        <span id="viewerMeta"></span>
+        <button class="ghost-button" id="viewerCopy" type="button">复制链接</button>
+      </footer>
+    </div>
+  </div>
+
+  <template id="taskTemplate">
+    <div class="task-card">
+      <header class="task-header">
+        <div class="task-meta-top">
+          <span class="task-status-badge"></span>
+          <span class="task-time"></span>
+        </div>
+        <div class="task-actions">
+          <button class="ghost-button" data-action="retry" title="重试">重试</button>
+          <button class="ghost-button" data-action="cancel" title="取消">取消</button>
+          <button class="ghost-button" data-action="delete" title="删除" style="color: var(--danger);">删除</button>
+        </div>
+      </header>
+
+      <div class="task-content">
+        <div class="task-prompt-container">
+          <div class="task-prompt"></div>
+          <footer class="task-info-bar">
+            <div class="task-params"></div>
+          </footer>
+        </div>
+        <div class="task-error" hidden></div>
+        <div class="task-images"></div>
+      </div>
+    </div>
+  </template>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+.task-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+}
+
+.task-prompt-container {
+  min-height: unset !important;
+  height: auto !important;
+}
+
+.task-prompt {
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: none;
+}
+
+.task-prompt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.task-prompt.is-expanded {
+  display: block;
+  overflow: visible;
+}
+
+.task-images {
+  width: 100% !important;
+  margin-top: 0 !important;
+}
+
+.task-images.img-count-1 {
+  display: block !important;
+}
+
+.task-images.img-count-1 .task-image-card {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: block !important;
+}
+
+.task-images.img-count-1 .task-image-card img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 70vh !important;
+  object-fit: contain !important;
+  border-radius: var(--radius);
+  display: block;
+}
+
+.task-images:not(.img-count-1) {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 0.75rem !important;
+}
+
+.task-images:not(.img-count-1) .task-image-card {
+  aspect-ratio: 16 / 9;
+}
+
+.task-images:not(.img-count-1) .task-image-card img {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.task-images.img-count-2 {
+  grid-template-columns: 1fr 1fr !important;
+  max-width: none !important;
+}
+
+.task-image-card img {
+  transition: opacity 0.3s ease;
+}
+
+.task-image-card img.img-loading {
+  min-height: 200px;
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  opacity: 0;
+}
+
+.task-image-card img.img-loaded {
+  opacity: 1;
+}
+
+.task-image-card img.img-error {
+  min-height: 120px;
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  opacity: 0.3;
+}
+
+.task-info-bar {
+  margin-top: 0.75rem !important;
+  padding-top: 0.75rem !important;
+}
+
+.task-params {
+  gap: 0.5rem 1rem !important;
+}
+
+@media (max-width: 768px) {
+  .task-images:not(.img-count-1) {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .task-images.img-count-1 .task-image-card img {
+    max-height: 50vh !important;
+  }
+
+  .task-card {
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .task-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .task-meta-top {
+    gap: 0.5rem;
+  }
+
+  .task-status-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .task-time {
+    font-size: 0.7rem;
+  }
+
+  .task-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .task-actions button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .task-prompt-container {
+    padding: 1rem !important;
+  }
+
+  .task-params {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem !important;
+    font-size: 0.75rem;
+  }
+
+  .task-prompt {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+  }
+
+  .task-info-bar {
+    margin-top: 0.5rem !important;
+    padding-top: 0.5rem !important;
+  }
+
+  /* 图片操作按钮在触屏设备始终可见 */
+  .image-actions {
+    opacity: 1 !important;
+    padding: 0.4rem;
+    gap: 0.3rem;
+  }
+
+  .image-action-btn {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .result-toolbar {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  .result-toolbar h2 {
+    font-size: 1.1rem;
+  }
+
+  .result-toolbar .eyebrow {
+    font-size: 0.7rem;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .task-filters {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .filter-tab {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 0;
+  }
+
+  .task-progress-wrapper {
+    gap: 0.5rem;
+  }
+
+  .task-error {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1rem;
+  }
+
+  .empty-state p {
+    font-size: 0.85rem;
+  }
+}
