@@ -1,20 +1,20 @@
 # Image API Studio
 
-Image API Studio is a lightweight web studio for OpenAI-compatible image generation APIs. It provides a protected frontend, task queue, generated image storage, manual API endpoint switching, and an admin dashboard.
+Image API Studio 是一个轻量级的 Web 图片工作台，适用于兼容 OpenAI 接口规范的生图 API。它提供受保护的前端界面、任务队列、生成图片存储、手动切换 API 节点，以及管理员面板。
 
-## Features
+## 功能特性
 
-- Text-to-image and image-to-image workflows
-- Reference image upload by click, drag and drop, or paste
-- Manual API base URL and API key switching from the admin UI
-- Single locked image model by default: `gpt-image-2`
-- Task queue with retry, cancel, delete, filters, progress, and SSE updates
-- Generated image storage with thumbnail endpoint and image viewer
-- Prompt assistant endpoint for compatible chat completion providers
-- Admin dashboard for service status, storage stats, API settings, and cleanup
-- Vite frontend build with hashed static assets
+- 文生图与图生图工作流
+- 支持点击、拖拽、粘贴上传参考图
+- 可在管理后台手动切换 API Base URL 和 API Key
+- 默认锁定单一图片模型：`gpt-image-2`
+- 任务队列支持重试、取消、删除、筛选、进度展示和 SSE 实时更新
+- 生成图片支持本地存储、缩略图接口和图片查看器
+- 为兼容的聊天补全服务提供提示词助手接口
+- 管理员面板支持服务状态、存储统计、API 设置和清理操作
+- 前端基于 Vite 构建，静态资源带哈希输出
 
-## Quick Start
+## 快速开始
 
 ```bash
 npm install
@@ -22,13 +22,13 @@ cp .env.example .env
 npm run dev
 ```
 
-Edit `.env` and set your own API credentials before generating images.
+开始生图前，请先编辑 `.env`，填入你自己的 API 配置。
 
-The app runs on `http://localhost:3000` by default.
+默认访问地址为 `http://localhost:3000`。
 
-## Configuration
+## 配置说明
 
-Copy `.env.example` to `.env`:
+将 `.env.example` 复制为 `.env`：
 
 ```ini
 OPENAI_API_KEY=
@@ -51,9 +51,9 @@ MAX_IMAGE_EDGE=4096
 MAX_IMAGE_PIXELS=16777216
 ```
 
-`MAX_REFERENCE_IMAGE_BYTES=0` and `MAX_REFERENCE_TOTAL_BYTES=0` disable upload size limits. Use positive byte values if you want limits.
+`MAX_REFERENCE_IMAGE_BYTES=0` 和 `MAX_REFERENCE_TOTAL_BYTES=0` 表示关闭上传体积限制。如果你希望限制大小，请填写大于 0 的字节数。
 
-## Development
+## 开发命令
 
 ```bash
 npm run dev
@@ -62,51 +62,51 @@ npm run build:client
 npm run check
 ```
 
-## Deployment
+## 部署说明
 
-The included deploy script uploads the built app to a server over SSH/SFTP.
+项目内置了部署脚本，可通过 SSH/SFTP 将构建后的应用上传到服务器。
 
 ```bash
 cp .env.deploy.example .env.deploy
-# edit DEPLOY_HOST, DEPLOY_USER, and either DEPLOY_SSH_PASSWORD or DEPLOY_SSH_KEY
+# 修改 DEPLOY_HOST、DEPLOY_USER，以及 DEPLOY_SSH_PASSWORD 或 DEPLOY_SSH_KEY
 node deploy.js
 ```
 
-The script:
+部署脚本会执行以下操作：
 
-- Builds the frontend
-- Uploads frontend and backend files
-- Installs production dependencies on the server
-- Restarts `image-api-studio.service`
+- 构建前端
+- 上传前端和后端文件
+- 在服务器安装生产依赖
+- 重启 `image-api-studio.service`
 
-Do not commit `.env` or `.env.deploy`. They are ignored by git.
+不要提交 `.env` 或 `.env.deploy`，它们已经被 Git 忽略。
 
-## API Endpoints
+## API 接口
 
-| Method | Path | Description |
+| 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/api/health` | Health check |
-| GET | `/api/config` | Frontend config |
-| POST | `/api/login` | Login |
-| POST | `/api/register` | Register with invite code |
-| POST | `/api/logout` | Logout |
-| GET | `/api/tasks` | List tasks |
-| POST | `/api/tasks` | Create generation task |
-| POST | `/api/tasks/:id/cancel` | Cancel task |
-| POST | `/api/tasks/:id/retry` | Retry task |
-| DELETE | `/api/tasks/:id` | Delete task |
-| GET | `/api/events` | SSE task updates |
-| POST | `/api/prompt-assistant` | Prompt assistant |
-| GET | `/api/admin/dashboard` | Admin dashboard |
-| GET | `/api/admin/storage` | Storage stats |
-| POST | `/api/admin/tasks/cleanup` | Cleanup old tasks |
+| GET | `/api/health` | 健康检查 |
+| GET | `/api/config` | 前端配置 |
+| POST | `/api/login` | 登录 |
+| POST | `/api/register` | 使用邀请码注册 |
+| POST | `/api/logout` | 退出登录 |
+| GET | `/api/tasks` | 获取任务列表 |
+| POST | `/api/tasks` | 创建生图任务 |
+| POST | `/api/tasks/:id/cancel` | 取消任务 |
+| POST | `/api/tasks/:id/retry` | 重试任务 |
+| DELETE | `/api/tasks/:id` | 删除任务 |
+| GET | `/api/events` | SSE 任务更新流 |
+| POST | `/api/prompt-assistant` | 提示词助手 |
+| GET | `/api/admin/dashboard` | 管理员面板数据 |
+| GET | `/api/admin/storage` | 存储统计 |
+| POST | `/api/admin/tasks/cleanup` | 清理旧任务 |
 
-## Security Notes
+## 安全说明
 
-- Never commit `.env`, `.env.deploy`, generated images, or runtime data.
-- Rotate any credential that was ever pasted into logs, chat, screenshots, or committed history.
-- Put this app behind HTTPS before exposing it publicly.
+- 不要提交 `.env`、`.env.deploy`、生成图片或运行时数据。
+- 任何曾经出现在日志、聊天记录、截图或提交历史中的密钥，都应该立即轮换。
+- 如果要对外公开访问，请务必先通过 HTTPS 反向代理或网关暴露服务。
 
-## License
+## 开源协议
 
 MIT
